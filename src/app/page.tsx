@@ -49,9 +49,32 @@ interface SimplexOutput {
   new_optimal_values: number[];
 }
 
+const formatEquation = (
+  coefficients: number[],
+  isObjective: boolean = false
+): string => {
+  let equation = isObjective ? "Z = " : "";
+
+  coefficients.forEach((coef, index) => {
+    if (index > 0 && coef >= 0) {
+      equation += " + ";
+    }
+
+    if (coef !== 0) {
+      if (coef === -1) {
+        equation += "-";
+      } else if (coef !== 1 || isObjective) {
+        equation += coef;
+      }
+      equation += `x${index + 1}`;
+    }
+  });
+
+  return equation || "0";
+};
+
 export default function LinearProgrammingSolver() {
   const [activeTab, setActiveTab] = useState("input");
-
   const [numVariables, setNumVariables] = useState<number>(2);
   const [maximize, setMaximize] = useState<boolean>(true);
   const [objective, setObjective] = useState<number[]>([0, 0]);
@@ -204,6 +227,36 @@ export default function LinearProgrammingSolver() {
                     />
                   ))}
                 </div>
+              </div>
+
+              <div className="space-y-2 p-4 bg-slate-50 rounded-md">
+                <Label className="font-medium">Preview das Equações:</Label>
+
+                <div className="mb-2">
+                  <span className="font-medium">
+                    Função Objetivo ({maximize ? "Max" : "Min"}):{" "}
+                  </span>
+                  <span className="font-mono">
+                    {formatEquation(objective, true)}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="font-medium">Sujeito a:</span>
+                  {constraints.map((constraint, index) => (
+                    <div key={index} className="font-mono ml-4">
+                      {formatEquation(constraint.lhs)} ≤ {constraint.rhs}
+                      {constraint.variation !== 0 && (
+                        <span className="text-gray-500 ml-2">
+                          (Variação: {constraint.variation > 0 ? "+" : ""}
+                          {constraint.variation})
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="font-mono ml-4">x₁, x₂ ≥ 0</div>
               </div>
 
               <div className="space-y-4">
