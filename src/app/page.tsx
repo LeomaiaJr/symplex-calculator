@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -54,20 +54,28 @@ const formatEquation = (
   isObjective: boolean = false
 ): string => {
   let equation = isObjective ? "Z = " : "";
+  let hasTerms = false;
 
   coefficients.forEach((coef, index) => {
-    if (index > 0 && coef >= 0) {
-      equation += " + ";
+    if (coef === 0 || coef === null || isNaN(coef)) {
+      return;
     }
 
-    if (coef !== 0) {
-      if (coef === -1) {
-        equation += "-";
-      } else if (coef !== 1 || isObjective) {
-        equation += coef;
-      }
-      equation += `x${index + 1}`;
+    if (hasTerms && coef > 0) {
+      equation += " + ";
+    } else if (hasTerms && coef < 0) {
+      equation += " - ";
+    } else if (coef < 0) {
+      equation += "-";
     }
+
+    const absCoef = Math.abs(coef);
+    if (absCoef !== 1 || isObjective) {
+      equation += absCoef;
+    }
+
+    equation += `x${index + 1}`;
+    hasTerms = true;
   });
 
   return equation || "0";
@@ -82,6 +90,10 @@ export default function LinearProgrammingSolver() {
     { lhs: number[]; rhs: number; variation: number }[]
   >([{ lhs: [0, 0], rhs: 0, variation: 0 }]);
   const [result, setResult] = useState<SimplexOutput | null>(null);
+
+  useEffect(() => {
+    document.querySelector("body > nextjs-portal")?.remove();
+  }, []);
 
   const handleObjectiveChange = (index: number, value: number) => {
     const newObjective = [...objective];
